@@ -1,0 +1,23 @@
+"Activity Date","Process Date","Settle Date","Instrument","Description","Trans Code","Quantity","Price","Amount"
+"12/19/2025","12/19/2025","12/22/2025","NFXL","Direxion Daily NFLX Bull 2X Shares ETF Trust
+CUSIP: 25461A882","Sell","323.507166","$31.51","$10,193.66"
+"12/19/2025","12/19/2025","12/22/2025","AMZU","Direxion Shares ETF Trust Direxion Daily AMZN Bull 2X Shares
+CUSIP: 25461A858","Sell","233.26553","$34.68","$8,090.77"
+"12/19/2025","12/19/2025","12/22/2025","SMCI","Super Micro Computer
+CUSIP: 86800U302","Sell","192","$30.47","$5,850.79"
+"12/17/2025","12/17/2025","12/17/2025","NFXL","Cap Gains: R/D 2025-12-10 P/D 2025-12-17 - 323.507166 shares at 1.35997","SCAP","","","$439.96"
+"12/17/2025","12/17/2025","12/17/2025","METU","Cap Gains: R/D 2025-12-10 P/D 2025-12-17 - 1023.237694 shares at 0.10937","SCAP","","","$111.91"
+"11/11/2025","11/11/2025","11/12/2025","METU","Direxion Shares ETF Trust Direxion Daily META Bull 2X Shares
+CUSIP: 25461A809","Buy","337","$29.66","($9,994.21)"
+"11/6/2025","11/6/2025","11/7/2025","TSLL","Direxion Daily TSLA Bull 2X Shares
+CUSIP: 25460G286","Buy","0.414204","$19.89","($8.24)"
+"10/15/2025","10/15/2025","10/16/2025","NFXL","Direxion Daily NFLX Bull 2X Shares ETF Trust
+CUSIP: 25461A882","Buy","323.507166","$35.00","($11,322.75)"
+"10/15/2025","10/15/2025","10/16/2025","AMZU","Direxion Shares ETF Trust Direxion Daily AMZN Bull 2X Shares
+CUSIP: 25461A858","Buy","233.26553","$38.50","($8,980.72)"
+"10/10/2025","10/10/2025","10/11/2025","SMCI","Super Micro Computer
+CUSIP: 86800U302","Buy","192","$35.00","($6,720.00)"
+"10/01/2025","10/01/2025","10/02/2025","METU","Direxion Shares ETF Trust Direxion Daily META Bull 2X Shares
+CUSIP: 25461A809","Sell","500","$25.00","$12,500.00"
+"09/01/2025","09/01/2025","09/02/2025","METU","Direxion Shares ETF Trust Direxion Daily META Bull 2X Shares
+CUSIP: 25461A809","Buy","500","$28.00","($14,000.00)"
