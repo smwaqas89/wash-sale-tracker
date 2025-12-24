@@ -2,7 +2,6 @@
 
 A production-grade tool to track and prevent IRS wash sale violations from your Robinhood transaction history.
 
-![Wash Sale Tracker Screenshot](./docs/screenshot.png)
 
 ## What is a Wash Sale?
 
