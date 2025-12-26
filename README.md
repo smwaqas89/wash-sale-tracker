@@ -36,7 +36,7 @@ The IRS disallows the loss deduction, which can significantly impact your taxes.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/wash-sale-tracker.git
+git clone https://github.com/smwaqas89/wash-sale-tracker.git
 cd wash-sale-tracker
 
 # Install dependencies
