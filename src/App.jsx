@@ -129,8 +129,15 @@ function processTransactions(csvText, asOfDate) {
     });
   }
   
-  // Sort by date
-  transactions.sort((a, b) => a.date - b.date);
+  // Sort by date, then Buys before Sells on same day (matches CLI FIFO behavior)
+  transactions.sort((a, b) => {
+    const dateDiff = a.date - b.date;
+    if (dateDiff !== 0) return dateDiff;
+    // On same day: Buys (0) before Sells (1)
+    const aIsSell = a.transType === 'Sell' ? 1 : 0;
+    const bIsSell = b.transType === 'Sell' ? 1 : 0;
+    return aIsSell - bIsSell;
+  });
   
   // FIFO processing
   const lots = {}; // ticker -> [{date, quantity, price, remaining}]
@@ -540,40 +547,77 @@ const ActiveWindowsTable = ({ windows, asOfDate }) => {
     );
   }
   
+  // Group by ticker
+  const grouped = {};
+  windows.forEach(w => {
+    if (!grouped[w.ticker]) {
+      grouped[w.ticker] = { losses: [], total: 0, safeDate: null };
+    }
+    grouped[w.ticker].losses.push(w);
+    grouped[w.ticker].total += w.lossAmount;
+    const safe = getSafeDate(w.saleDate);
+    if (!grouped[w.ticker].safeDate || safe > grouped[w.ticker].safeDate) {
+      grouped[w.ticker].safeDate = safe;
+    }
+  });
+  
+  // Sort by total loss (highest first)
+  const sortedTickers = Object.entries(grouped)
+    .sort((a, b) => b[1].total - a[1].total);
+  
+  const grandTotal = sortedTickers.reduce((sum, [, data]) => sum + data.total, 0);
+  
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-slate-800/50">
-            <th className="px-5 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ticker</th>
-            <th className="px-5 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Loss Date</th>
-            <th className="px-5 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Loss Amount</th>
-            <th className="px-5 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Safe After</th>
-            <th className="px-5 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Days Left</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-800">
-          {windows.map((w, i) => {
-            const safeDate = getSafeDate(w.saleDate);
-            const days = daysUntil(safeDate, asOfDate);
-            return (
-              <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                <td className="px-5 py-4">
-                  <span className="font-mono font-semibold text-white">{w.ticker}</span>
-                </td>
-                <td className="px-5 py-4 text-slate-300 font-mono text-sm">{formatDate(w.saleDate)}</td>
-                <td className="px-5 py-4 text-right text-red-400 font-mono text-sm">{formatCurrency(w.lossAmount)}</td>
-                <td className="px-5 py-4 text-slate-300 font-mono text-sm">{formatDate(safeDate)}</td>
-                <td className="px-5 py-4 text-right">
-                  <StatusBadge type={days <= 7 ? 'warning' : 'danger'}>
-                    {days} days
-                  </StatusBadge>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="space-y-4">
+      <div className="overflow-hidden rounded-xl border border-slate-800">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-slate-800/50">
+              <th className="px-5 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ticker</th>
+              <th className="px-5 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Loss</th>
+              <th className="px-5 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Safe After</th>
+              <th className="px-5 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Days Left</th>
+              <th className="px-5 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider"># Sales</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800">
+            {sortedTickers.map(([ticker, data]) => {
+              const days = daysUntil(data.safeDate, asOfDate);
+              return (
+                <tr key={ticker} className="hover:bg-slate-800/30 transition-colors">
+                  <td className="px-5 py-4">
+                    <span className="font-mono font-semibold text-white">{ticker}</span>
+                  </td>
+                  <td className="px-5 py-4 text-right text-red-400 font-mono text-sm">{formatCurrency(data.total)}</td>
+                  <td className="px-5 py-4 text-slate-300 font-mono text-sm">{formatDate(data.safeDate)}</td>
+                  <td className="px-5 py-4 text-right">
+                    <StatusBadge type={days <= 7 ? 'warning' : 'danger'}>
+                      {days} days
+                    </StatusBadge>
+                  </td>
+                  <td className="px-5 py-4 text-right text-slate-400 font-mono text-sm">{data.losses.length}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="bg-slate-800/30 border-t border-slate-700">
+              <td className="px-5 py-4 font-semibold text-white">TOTAL</td>
+              <td className="px-5 py-4 text-right text-red-400 font-mono font-semibold">{formatCurrency(grandTotal)}</td>
+              <td colSpan="3"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-200">
+            Buying any of these tickers before the safe date will trigger a wash sale and disallow the loss deduction!
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
