@@ -82,26 +82,49 @@ def print_violations(violations: list[WashSaleViolation]) -> None:
 
 
 def print_active_windows(active: list[LossSale], as_of_date: date) -> None:
-    """Print active wash sale windows."""
+    """Print active wash sale windows grouped by ticker."""
     if not active:
         print("\n✓ No active wash sale windows.")
         return
     
     print_header(f"Active Wash Sale Windows (as of {as_of_date})")
     
-    # Table header
-    print(f"\n{'TICKER':<8} {'LOSS DATE':<12} {'LOSS AMOUNT':>12} {'SAFE AFTER':<12} {'DAYS':>6}")
-    print("-" * 54)
+    # Group by ticker
+    from collections import defaultdict
+    ticker_groups = defaultdict(lambda: {'losses': [], 'total': 0.0, 'safe_date': None})
     
     for ls in active:
-        days = ls.days_until_safe(as_of_date)
+        ticker_groups[ls.ticker]['losses'].append(ls)
+        ticker_groups[ls.ticker]['total'] += ls.loss_amount
+        safe = ls.safe_to_buy_date()
+        if ticker_groups[ls.ticker]['safe_date'] is None or safe > ticker_groups[ls.ticker]['safe_date']:
+            ticker_groups[ls.ticker]['safe_date'] = safe
+    
+    # Sort by total loss amount (highest first)
+    sorted_tickers = sorted(ticker_groups.items(), key=lambda x: -x[1]['total'])
+    
+    # Table header
+    print(f"\n{'TICKER':<8} {'TOTAL LOSS':>14} {'SAFE AFTER':<12} {'DAYS':>8} {'# SALES':>8}")
+    print("-" * 54)
+    
+    grand_total = 0.0
+    for ticker, data in sorted_tickers:
+        days = (data['safe_date'] - as_of_date).days
+        num_sales = len(data['losses'])
+        grand_total += data['total']
         print(
-            f"{ls.ticker:<8} "
-            f"{ls.sale_date.isoformat():<12} "
-            f"${ls.loss_amount:>10,.2f} "
-            f"{ls.safe_to_buy_date().isoformat():<12} "
-            f"{days:>6}"
+            f"{ticker:<8} "
+            f"${data['total']:>12,.2f} "
+            f"{data['safe_date'].isoformat():<12} "
+            f"{days:>8} "
+            f"{num_sales:>8}"
         )
+    
+    print("-" * 54)
+    print(f"{'TOTAL':<8} ${grand_total:>12,.2f}")
+    print()
+    print("⚠️  Buying any of these tickers before the safe date")
+    print("   will trigger a wash sale and disallow the loss deduction!")
 
 
 def print_ticker_check(ticker: str, engine: WashSaleEngine, as_of_date: date) -> None:
